@@ -18,13 +18,13 @@ input int                  inputMagicNumber  = 2000001;
 input int                  inputTradeComment = __FILE__;
 input ENUM_APPLIED_PRICE   inputAppliedPrice = PRICE_CLOSE;
 
-
-
 //Global variables
-string indicatorMetrics = "";
-int ticksReceivedCount = 0;                     //Takes in the number of ticks 
-int ticksProcessedCount = 0;                    //Takes in the number of ticks processed after candle is formed 
+string indicatorMetrics               = "";
+int ticksReceivedCount                = 0;      //Takes in the number of ticks 
+int ticksProcessedCount               = 0;      //Takes in the number of ticks processed after candle is formed 
 static datetime timeLastTickProcessed = 0;      //Stores the last time a tick was processed after candle is formed 
+bool tradeCount                       = false;  //Stores trade count boolean values
+double tradeCountTicks                = 0;      //Stores trade count double values
 
 //Macd variable and Holder
 int MacdHandle = 0;
@@ -48,6 +48,12 @@ double       currentEquity     = 0.0;       //Current Equity
 input double MaxLossPercent    = 0.02;      //Percent risk per trade
 input double ATRMultStopLoss   = 1.0;       //Multiplier value for determining ATR based stop loss
 input double ATRMultTakeProfit = 2.0;       //Multiplier value for determining ATR based take profit
+
+
+
+
+
+
 
 
 
@@ -80,6 +86,12 @@ int OnInit()
 
    return(INIT_SUCCEEDED);
   }
+//===============================================================================================
+
+
+
+
+
 //+------------------------------------------------------------------+
 //| Expert deinitialization function                                 |
 //+------------------------------------------------------------------+
@@ -94,6 +106,10 @@ void OnDeinit(const int reason)
    Print("Handles released...");
    
   }
+//===============================================================================================
+
+
+
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
 //+------------------------------------------------------------------+
@@ -131,17 +147,45 @@ void OnTick()
       double currentATR = getATRValue(); 
       StringConcatenate(indicatorMetrics, indicatorMetrics, "\n\r", " | ATR: ", currentATR);
 
+
+      //===============================================================================================
       //Enter new trades
-      if(openSignalMacd == "Long" && openSignalEMA == "Long")
+
+
+      if(openSignalMacd == "Long" && openSignalEMA == "Long" && tradeCount == false)
         {
           processTradeOpen(ORDER_TYPE_BUY, currentATR);
           Comment("Buy Trade Alert");
+          tradeCount = true;
         };
-      if(openSignalMacd == "Short" && openSignalEMA == "Short")
+      if(openSignalMacd == "Short" && openSignalEMA == "Short" && tradeCount == false)
         {
           processTradeOpen(ORDER_TYPE_SELL, currentATR);
           Comment("Sell Trade Alert");
+          tradeCount = true;
         };
+      if(openSignalMacd == "Long" && openSignalEMA == "Long" && tradeCount == true)
+        {
+          Alert("Buy Trade Ongoing Already");
+          tradeCount = true;
+          tradeCountTicks++;
+        };
+      if(openSignalMacd == "Short" && openSignalEMA == "Short" && tradeCount == true)
+        {
+          Alert("Sell Trade Ongoing Already");
+          tradeCount = true;
+          tradeCountTicks++;
+        };
+
+
+
+
+      if (tradeCountTicks == 5000)
+      {
+        tradeCount      = false;
+        tradeCountTicks = 0;
+      }
+      
 
      };
      
@@ -153,10 +197,16 @@ void OnTick()
            " _____>>>>", indicatorMetrics);
 
   };
+//===============================================================================================
+//===============================================================================================
+//===============================================================================================
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
+//===============================================================================================
+//===============================================================================================
+//===============================================================================================
 
 
 
