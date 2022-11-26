@@ -25,6 +25,10 @@ int ticksProcessedCount               = 0;      //Takes in the number of ticks p
 static datetime timeLastTickProcessed = 0;      //Stores the last time a tick was processed after candle is formed 
 bool tradeCount                       = false;  //Stores trade count boolean values
 double tradeCountTicks                = 0;      //Stores trade count double values
+double tradeCountTicksMax             = 2000;   //Stores trade count Max values
+double tradeBufferCount               = 0;      //Stores countdown initialization before trade execution
+double tradeBufferCountMax            = 500;   //Stores countdown Max before trade execution
+
 
 //Macd variable and Holder
 int MacdHandle = 0;
@@ -152,35 +156,77 @@ void OnTick()
       //Enter new trades
 
 
-      if(openSignalMacd == "Long" && openSignalEMA == "Long" && tradeCount == false)
+      if(openSignalMacd == "Long" && openSignalEMA == "Long" && tradeCount == false && tradeBufferCount <= 100)
+        {
+          Alert("Wait a while");
+          tradeCountTicks++;
+          tradeBufferCount++;
+        };
+      if(openSignalMacd == "Short" && openSignalEMA == "Short" && tradeCount == false && tradeBufferCount <= 100)
+        {
+          Alert("Wait a while");
+          tradeCountTicks++;
+          tradeBufferCount++;
+        };
+      if(openSignalMacd == "Short" && openSignalEMA == "Long" && tradeCount == false && tradeBufferCount <= 100)
+        {
+          Alert("Wait a while");
+          tradeCountTicks++;
+          tradeBufferCount++;
+        };
+      if(openSignalMacd == "Long" && openSignalEMA == "Short" && tradeCount == false && tradeBufferCount <= 100)
+        {
+          Alert("Wait a while");
+          tradeCountTicks++;
+          tradeBufferCount++;
+        };
+//========================================================================================================================================
+
+      if(openSignalMacd == "Long" && openSignalEMA == "Long" && tradeCount == false && tradeBufferCount >= tradeBufferCountMax)
         {
           processTradeOpen(ORDER_TYPE_BUY, currentATR);
-          Comment("Buy Trade Alert");
+          Alert("Buy Trade Alert");
           tradeCount = true;
+          tradeBufferCount = 0;
         };
-      if(openSignalMacd == "Short" && openSignalEMA == "Short" && tradeCount == false)
+      if(openSignalMacd == "Short" && openSignalEMA == "Short" && tradeCount == false && tradeBufferCount >= tradeBufferCountMax)
         {
           processTradeOpen(ORDER_TYPE_SELL, currentATR);
-          Comment("Sell Trade Alert");
+          Alert("Sell Trade Alert");
           tradeCount = true;
+          tradeBufferCount = 0;
         };
-      if(openSignalMacd == "Long" && openSignalEMA == "Long" && tradeCount == true)
+//========================================================================================================================================
+
+      if(openSignalMacd == "Long" && openSignalEMA == "Long" && tradeCount == true && tradeBufferCount <= 100)
         {
-          Alert("Buy Trade Ongoing Already");
-          tradeCount = true;
+          Alert("Buy Trade Ongoing...");
+          tradeBufferCount = 0;
           tradeCountTicks++;
         };
-      if(openSignalMacd == "Short" && openSignalEMA == "Short" && tradeCount == true)
+      if(openSignalMacd == "Short" && openSignalEMA == "Short" && tradeCount == true && tradeBufferCount <= 100)
         {
-          Alert("Sell Trade Ongoing Already");
-          tradeCount = true;
+          Alert("Sell Trade Ongoing...");
+          tradeBufferCount = 0;
           tradeCountTicks++;
         };
+     if(openSignalMacd == "Long" && openSignalEMA == "Short" && tradeCount == true && tradeBufferCount <= 100)
+        {
+          Alert("Buy Trade Ongoing...");
+          tradeBufferCount = 0;
+          tradeCountTicks++;
+        };
+      if(openSignalMacd == "Short" && openSignalEMA == "Long" && tradeCount == true && tradeBufferCount <= 100)
+        {
+          Alert("Sell Trade Ongoing...");
+          tradeBufferCount = 0;
+          tradeCountTicks++;
+        };
+//========================================================================================================================================
 
 
 
-
-      if (tradeCountTicks == 5000)
+      if (tradeCountTicks >= tradeCountTicksMax)
       {
         tradeCount      = false;
         tradeCountTicks = 0;
@@ -191,10 +237,11 @@ void OnTick()
      
     //Comment section on the chart
     Comment("\n\rExpert: Shosan Test5, with a magic number of ", inputMagicNumber,
-           " _____>>>>MT5 Server Time: ", TimeCurrent(),
-           " _____>>>>Number of ticks: ", ticksReceivedCount,
-           " _____>>>>Symbols Traded: ", Symbol(),
-           " _____>>>>", indicatorMetrics);
+           " ____>>MT5 Server Time: ", TimeCurrent(),
+           " ____>>Number of ticks: ", ticksReceivedCount,
+           " ____>>Number of ticks Processed: ", ticksProcessedCount,
+           " ____>>Symbols Traded: ", Symbol(),
+           " ____>>", indicatorMetrics);
 
   };
 //===============================================================================================
