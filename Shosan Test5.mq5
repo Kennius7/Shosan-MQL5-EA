@@ -24,10 +24,10 @@ int ticksReceivedCount                = 0;      //Takes in the number of ticks
 int ticksProcessedCount               = 0;      //Takes in the number of ticks processed after candle is formed 
 static datetime timeLastTickProcessed = 0;      //Stores the last time a tick was processed after candle is formed 
 bool tradeCount                       = false;  //Stores trade count boolean values
-double tradeCountTicks                = 0;      //Stores trade count double values
-double tradeCountTicksMax             = 2000;   //Stores trade count Max values
-double tradeBufferCount               = 0;      //Stores countdown initialization before trade execution
-double tradeBufferCountMax            = 500;   //Stores countdown Max before trade execution
+double tradeCountTicks                = 0;      //Stores trade count to determine spacing between trades
+double tradeCountTicksMax             = 10000;   //Stores trade count Max values
+double tradeBufferCount               = 0;      //Stores countdown initialization before trade starts
+double tradeBufferCountMax            = 500;   //Stores countdown Max before trade starts
 
 
 //Macd variable and Holder
@@ -45,13 +45,13 @@ int HandleATR;
 int AtrPeriod = 14;
 
 //Risk Metrics
-input bool   riskCompounding   = true;      //Use compounded risk method? 
+input bool   riskCompounding   = false;     //Use compounded risk method? 
 double       startingEquity    = 0.0;       //Starting Equity
 double       currentEquityRisk = 0.0;       //Equity that will be risked per trade
 double       currentEquity     = 0.0;       //Current Equity
 input double MaxLossPercent    = 0.02;      //Percent risk per trade
-input double ATRMultStopLoss   = 1.0;       //Multiplier value for determining ATR based stop loss
-input double ATRMultTakeProfit = 2.0;       //Multiplier value for determining ATR based take profit
+input double ATRMultStopLoss   = 2.0;       //Multiplier value for determining ATR based stop loss
+input double ATRMultTakeProfit = 1.0;       //Multiplier value for determining ATR based take profit
 
 
 
@@ -155,26 +155,30 @@ void OnTick()
       //===============================================================================================
       //Enter new trades
 
-
-      if(openSignalMacd == "Long" && openSignalEMA == "Long" && tradeCount == false && tradeBufferCount <= 100)
+      if (tradeCountTicks >= tradeCountTicksMax)
+      {
+        tradeCount      = false;
+        tradeCountTicks = 0;
+      }
+      if(openSignalMacd == "Long" && openSignalEMA == "Long" && tradeCount == false && tradeBufferCount < tradeBufferCountMax)
         {
           Alert("Wait a while");
           tradeCountTicks++;
           tradeBufferCount++;
         };
-      if(openSignalMacd == "Short" && openSignalEMA == "Short" && tradeCount == false && tradeBufferCount <= 100)
+      if(openSignalMacd == "Short" && openSignalEMA == "Short" && tradeCount == false && tradeBufferCount < tradeBufferCountMax)
         {
           Alert("Wait a while");
           tradeCountTicks++;
           tradeBufferCount++;
         };
-      if(openSignalMacd == "Short" && openSignalEMA == "Long" && tradeCount == false && tradeBufferCount <= 100)
+      if(openSignalMacd == "Short" && openSignalEMA == "Long" && tradeCount == false && tradeBufferCount < tradeBufferCountMax)
         {
           Alert("Wait a while");
           tradeCountTicks++;
           tradeBufferCount++;
         };
-      if(openSignalMacd == "Long" && openSignalEMA == "Short" && tradeCount == false && tradeBufferCount <= 100)
+      if(openSignalMacd == "Long" && openSignalEMA == "Short" && tradeCount == false && tradeBufferCount < tradeBufferCountMax)
         {
           Alert("Wait a while");
           tradeCountTicks++;
@@ -198,25 +202,25 @@ void OnTick()
         };
 //========================================================================================================================================
 
-      if(openSignalMacd == "Long" && openSignalEMA == "Long" && tradeCount == true && tradeBufferCount <= 100)
+      if(openSignalMacd == "Long" && openSignalEMA == "Long" && tradeCount == true && tradeBufferCount < tradeBufferCountMax)
         {
           Alert("Buy Trade Ongoing...");
           tradeBufferCount = 0;
           tradeCountTicks++;
         };
-      if(openSignalMacd == "Short" && openSignalEMA == "Short" && tradeCount == true && tradeBufferCount <= 100)
+      if(openSignalMacd == "Short" && openSignalEMA == "Short" && tradeCount == true && tradeBufferCount < tradeBufferCountMax)
         {
           Alert("Sell Trade Ongoing...");
           tradeBufferCount = 0;
           tradeCountTicks++;
         };
-     if(openSignalMacd == "Long" && openSignalEMA == "Short" && tradeCount == true && tradeBufferCount <= 100)
+     if(openSignalMacd == "Long" && openSignalEMA == "Short" && tradeCount == true && tradeBufferCount < tradeBufferCountMax)
         {
           Alert("Buy Trade Ongoing...");
           tradeBufferCount = 0;
           tradeCountTicks++;
         };
-      if(openSignalMacd == "Short" && openSignalEMA == "Long" && tradeCount == true && tradeBufferCount <= 100)
+      if(openSignalMacd == "Short" && openSignalEMA == "Long" && tradeCount == true && tradeBufferCount < tradeBufferCountMax)
         {
           Alert("Sell Trade Ongoing...");
           tradeBufferCount = 0;
@@ -226,20 +230,14 @@ void OnTick()
 
 
 
-      if (tradeCountTicks >= tradeCountTicksMax)
-      {
-        tradeCount      = false;
-        tradeCountTicks = 0;
-      }
-      
 
      };
      
     //Comment section on the chart
     Comment("\n\rExpert: Shosan Test5, with a magic number of ", inputMagicNumber,
-           " ____>>MT5 Server Time: ", TimeCurrent(),
            " ____>>Number of ticks: ", ticksReceivedCount,
-           " ____>>Number of ticks Processed: ", ticksProcessedCount,
+           " ____>>Number of trade count ticks: ", tradeCountTicks,
+           " ____>>Number of Trade Buffer Count: ", tradeBufferCount,
            " ____>>Symbols Traded: ", Symbol(),
            " ____>>", indicatorMetrics);
 
