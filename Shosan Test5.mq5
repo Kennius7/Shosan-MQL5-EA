@@ -25,7 +25,7 @@ int ticksProcessedCount               = 0;      //Takes in the number of ticks p
 static datetime timeLastTickProcessed = 0;      //Stores the last time a tick was processed after candle is formed 
 bool tradeCount                       = false;  //Stores trade count boolean values
 double tradeCountTicks                = 0;      //Stores trade count to determine spacing between trades
-double tradeCountTicksMax             = 10000;   //Stores trade count Max values
+double tradeCountTicksMax             = 1000;   //Stores trade count Max values
 double tradeBufferCount               = 0;      //Stores countdown initialization before trade starts
 double tradeBufferCountMax            = 500;   //Stores countdown Max before trade starts
 
@@ -45,7 +45,7 @@ int HandleATR;
 int AtrPeriod = 14;
 
 //Risk Metrics
-input bool   riskCompounding   = false;     //Use compounded risk method? 
+input bool   riskCompounding   = true;     //Use compounded risk method? 
 double       startingEquity    = 0.0;       //Starting Equity
 double       currentEquityRisk = 0.0;       //Equity that will be risked per trade
 double       currentEquity     = 0.0;       //Current Equity
@@ -186,14 +186,14 @@ void OnTick()
         };
 //========================================================================================================================================
 
-      if(openSignalMacd == "Long" && openSignalEMA == "Long" && tradeCount == false && tradeBufferCount >= tradeBufferCountMax)
+      if(openSignalMacd == "Long" && openSignalEMA == "Long" && tradeCount == false && tradeBufferCount >= tradeBufferCountMax && currentATR <= 0.0005)
         {
           processTradeOpen(ORDER_TYPE_BUY, currentATR);
           Alert("Buy Trade Alert");
           tradeCount = true;
           tradeBufferCount = 0;
         };
-      if(openSignalMacd == "Short" && openSignalEMA == "Short" && tradeCount == false && tradeBufferCount >= tradeBufferCountMax)
+      if(openSignalMacd == "Short" && openSignalEMA == "Short" && tradeCount == false && tradeBufferCount >= tradeBufferCountMax && currentATR <= 0.0005)
         {
           processTradeOpen(ORDER_TYPE_SELL, currentATR);
           Alert("Sell Trade Alert");
